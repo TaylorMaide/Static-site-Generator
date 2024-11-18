@@ -1,7 +1,7 @@
 from htmlnode import HTMLNode
 
 class LeafNode(HTMLNode):
-    def __init__(self, value, tag = None, props = None):
+    def __init__(self, tag = None, value = None, props = None):
         if props is None:
             props = {}
         super().__init__(tag, props)
@@ -17,5 +17,4 @@ class LeafNode(HTMLNode):
         attributes = " ".join(f'{key}="{value}"' for key, value in self.props.items())
         if attributes:
             return f"<{self.tag} {attributes}>{self.value}</{self.tag}>"
-        else:
-            return f"<{self.tag}>{self.value}</{self.tag}>"
+        return f"<{self.tag}>{self.value}</{self.tag}>"
