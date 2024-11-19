@@ -8,6 +8,15 @@ class LeafNode(HTMLNode):
         self.value = value
         self.props = props
 
+    def __eq__(self, other):
+        if not isinstance(other, LeafNode):
+            return False
+        return (
+            self.tag == other.tag and
+            self.value == other.value and
+            self.props == other.props
+        )
+
     def to_html(self):
         if self.value is None:
             raise ValueError("LeafNode must have a value")
@@ -18,3 +27,6 @@ class LeafNode(HTMLNode):
         if attributes:
             return f"<{self.tag} {attributes}>{self.value}</{self.tag}>"
         return f"<{self.tag}>{self.value}</{self.tag}>"
+    
+    def add_property(self, prop_name, prop_value):
+        self.props[prop_name] = prop_value
