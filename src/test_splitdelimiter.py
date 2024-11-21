@@ -1,7 +1,7 @@
 import unittest
 
 from textnode import TextNode, TextType
-from splitdelimiter import split_node_delimiter
+from split_nodes import split_node_delimiter, split_nodes_image, split_nodes_link
 
 class TestSplitDelimiter(unittest.TestCase):
     def test_basic_code_delimiter(self):
@@ -174,3 +174,110 @@ class TestSplitDelimiter(unittest.TestCase):
         self.assertEqual(nodes[2].text_type, TextType.TEXT)
         self.assertEqual(nodes[3].text, "more bold")
         self.assertEqual(nodes[3].text_type, TextType.BOLD)
+
+
+    def test_split_nodes_images(self):
+        node = TextNode("![alt text](http://example.com)", TextType.TEXT)
+        expected_result = [
+            TextNode("alt text", TextType.IMAGE, "http://example.com")
+        ]
+        result = split_nodes_image([node])
+        self.assertEqual(expected_result, result)
+    def test_split_nodes_multiple_images(self):
+        node = TextNode(
+            "![Boot.dev](https://www.boot.dev) and ![YouTube](https://www.youtube.com/@bootdotdev)", 
+            TextType.TEXT
+        )
+        expected_result = [
+            TextNode("Boot.dev", TextType.IMAGE, "https://www.boot.dev"),
+            TextNode(" and ", TextType.TEXT),
+         TextNode("YouTube", TextType.IMAGE, "https://www.youtube.com/@bootdotdev")
+        ]
+        result = split_nodes_image([node])
+        self.assertEqual(expected_result, result)
+    def test_split_nodes_image_empty_text(self):
+        node = TextNode("", TextType.TEXT)
+        expected_result = [node]
+        result = split_nodes_image([node])
+        self.assertEqual(expected_result, result)
+    def test_split_nodes_image_no_match(self):
+        node = TextNode("Just plain text without images", TextType.TEXT)
+        expected_result = [node]
+        result = split_nodes_image([node])
+        self.assertEqual(expected_result, result)
+    def test_split_nodes_image_incomplete_pattern(self):
+        node = TextNode("Here is an image ![alt_text]()", TextType.TEXT)
+        expected_result = [node]
+        result = split_nodes_image([node])
+        self.assertEqual(expected_result, result)
+    
+
+    def test_split_nodes_links(self):
+        node = TextNode("[link text](http://example.com)", TextType.TEXT)
+        expected_result = [
+            TextNode("link text", TextType.LINK, "http://example.com")
+        ]
+        result = split_nodes_link([node])
+        self.assertEqual(expected_result, result)
+    def test_split_nodes_multiple_links(self):
+        node = TextNode(
+            "[Boot.dev](https://www.boot.dev) and [YouTube](https://www.youtube.com/@bootdotdev)", 
+            TextType.TEXT
+        )
+        expected_result = [
+            TextNode("Boot.dev", TextType.LINK, "https://www.boot.dev"),
+            TextNode(" and ", TextType.TEXT),
+         TextNode("YouTube", TextType.LINK, "https://www.youtube.com/@bootdotdev")
+        ]
+        result = split_nodes_link([node])
+        self.assertEqual(expected_result, result)
+    def test_split_nodes_link_empty_text(self):
+        node = TextNode("", TextType.TEXT)
+        expected_result = [node]
+        result = split_nodes_link([node])
+        self.assertEqual(expected_result, result)
+    def test_split_nodes_link_no_match(self):
+        node = TextNode("Just plain text without links", TextType.TEXT)
+        expected_result = [node]
+        result = split_nodes_link([node])
+        self.assertEqual(expected_result, result)
+    def test_split_nodes_link_incomplete_pattern(self):
+        node = TextNode("Check this [text] out", TextType.TEXT)
+        expected_result = [node]
+        result = split_nodes_link([node])
+        self.assertEqual(expected_result, result)
+
+    def test_split_nodes_image_malformed(self):
+        node = TextNode("![malformed [alt](url) image](http://example.com", TextType.TEXT)
+        expected_result = [node]
+        result = split_nodes_image([node])
+        self.assertEqual(expected_result, result)
+
+    def test_split_nodes_link_malformed(self):
+        node = TextNode("[malformed [text](url]", TextType.TEXT)
+        expected_result = [node]
+        result = split_nodes_link([node])
+        self.assertEqual(expected_result, result)
+
+    def test_split_nodes_combined_images_links(self):
+        node = TextNode(
+            "This is [Boot.dev](https://www.boot.dev) and ![image](http://example.com)",
+            TextType.TEXT
+        )
+        expected_result = [
+            TextNode("This is ", TextType.TEXT),
+            TextNode("Boot.dev", TextType.LINK, "https://www.boot.dev"),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("image", TextType.IMAGE, "http://example.com")
+        ]
+        result = split_nodes_image(split_nodes_link([node]))
+        self.assertEqual(expected_result, result)
+
+    def test_split_nodes_plain_text_resembling_markdown(self):
+        node = TextNode("Looks like ![markdown] but isn't [link]", TextType.TEXT)
+        expected_result = [node]
+        result = split_nodes_image(split_nodes_link([node]))
+        self.assertEqual(expected_result, result)
+
+if __name__ == "__main__":
+    unittest.main()
