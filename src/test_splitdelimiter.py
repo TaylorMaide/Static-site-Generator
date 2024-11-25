@@ -1,9 +1,12 @@
 import unittest
 
 from textnode import TextNode, TextType
-from split_nodes import split_node_delimiter, split_nodes_image, split_nodes_link
+from split_nodes import split_node_delimiter, split_nodes_image, split_nodes_link, text_to_textnodes
 
 class TestSplitDelimiter(unittest.TestCase):
+
+    # Start of tests for the delimiter
+
     def test_basic_code_delimiter(self):
         node = TextNode("This is `code` here", TextType.TEXT)
         nodes = split_node_delimiter([node], "`", TextType.CODE)
@@ -175,6 +178,8 @@ class TestSplitDelimiter(unittest.TestCase):
         self.assertEqual(nodes[3].text, "more bold")
         self.assertEqual(nodes[3].text_type, TextType.BOLD)
 
+    # Start of testing spliting image nodes and link nodes
+
 
     def test_split_nodes_images(self):
         node = TextNode("![alt text](http://example.com)", TextType.TEXT)
@@ -277,6 +282,114 @@ class TestSplitDelimiter(unittest.TestCase):
         node = TextNode("Looks like ![markdown] but isn't [link]", TextType.TEXT)
         expected_result = [node]
         result = split_nodes_image(split_nodes_link([node]))
+        self.assertEqual(expected_result, result)
+
+    # Start of texts for test to TextNode
+
+    def test_text_to_TextNode(self):
+        node = "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
+        expected_result = [
+            TextNode("This is ", TextType.TEXT),
+            TextNode("text", TextType.BOLD),
+            TextNode(" with an ", TextType.TEXT),
+            TextNode("italic", TextType.ITALIC),
+            TextNode(" word and a ", TextType.TEXT),
+            TextNode("code block", TextType.CODE),
+            TextNode(" and an ", TextType.TEXT),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" and a ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://boot.dev"),
+        ]
+        result = text_to_textnodes(node)
+        self.assertEqual(expected_result, result)
+
+    def test_text_to_TextNode_is_empty(self):
+        node = ""
+        expected_result = []
+        result = text_to_textnodes(node)
+        self.assertEqual(expected_result, result)
+
+    def test_text_to_TextNode_only_bold(self):
+        node = "This is to **test bold** font"
+        expected_result = [
+            TextNode("This is to ", TextType.TEXT),
+            TextNode("test bold", TextType.BOLD),
+            TextNode(" font", TextType.TEXT)
+        ]
+        result = text_to_textnodes(node)
+        self.assertEqual(expected_result, result)
+
+    def test_text_to_TextNode_only_italic(self):
+        node = "This is to *test italic* font"
+        expected_result = [
+            TextNode("This is to ", TextType.TEXT),
+            TextNode("test italic", TextType.ITALIC),
+            TextNode(" font", TextType.TEXT)
+        ]
+        result = text_to_textnodes(node)
+        self.assertEqual(expected_result, result)
+    
+    def test_text_to_TextNode_only_code(self):
+        node = "This is to `test case` font"
+        expected_result = [
+            TextNode("This is to ", TextType.TEXT),
+            TextNode("test case", TextType.CODE),
+            TextNode(" font", TextType.TEXT)
+        ]
+        result = text_to_textnodes(node)
+        self.assertEqual(expected_result, result)
+
+    def test_text_to_TextNode_only_image(self):
+        node = "This is to ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) image"
+        expected_result = [
+            TextNode("This is to ", TextType.TEXT),
+            TextNode("obi wan image", TextType.IMAGE, "https://i.imgur.com/fJRm4Vk.jpeg"),
+            TextNode(" image", TextType.TEXT)
+        ]
+        result = text_to_textnodes(node)
+        self.assertEqual(expected_result, result)
+
+    def test_text_to_TextNode_only_link(self):
+        node = "This is to [link](https://boot.dev) link"
+        expected_result = [
+            TextNode("This is to ", TextType.TEXT),
+            TextNode("link", TextType.LINK, "https://boot.dev"),
+            TextNode(" link", TextType.TEXT)
+        ]
+        result = text_to_textnodes(node)
+        self.assertEqual(expected_result, result)
+
+    def test_text_to_TextNode_invalid_markdown(self):
+        node = "This has **imcomplete bold"
+        with self.assertRaises(Exception):
+            text_to_textnodes(node)
+
+    def test_text_to_TextNode_multiple_same_formats(self):
+        node = "**bold one** normal text **bold two**"
+        expected_result = [
+            TextNode("bold one", TextType.BOLD),
+            TextNode(" normal text ", TextType.TEXT),
+            TextNode("bold two", TextType.BOLD)
+        ]
+        result = text_to_textnodes(node)
+        self.assertEqual(expected_result, result)
+
+    def test_text_to_TextNode_plain_text(self):
+        node = "Just plain text"
+        expected_result = [
+            TextNode("Just plain text", TextType.TEXT)
+        ]
+        result = text_to_textnodes(node)
+        self.assertEqual(expected_result, result)
+    
+    def test_text_to_TextNode_adjacent_formats(self):
+        node = "**bold**`code`*italic*"
+        expected_result = [
+            TextNode("bold", TextType.BOLD),
+            TextNode("code", TextType.CODE),
+            TextNode("italic", TextType.ITALIC)
+        ]
+        result = text_to_textnodes(node)
         self.assertEqual(expected_result, result)
 
 if __name__ == "__main__":

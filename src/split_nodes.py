@@ -3,20 +3,27 @@ from textnode import TextNode, TextType
 
 def split_node_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
-    delimiters = ["**", "*", "`"]
+    delimters_to_check = ["*", "`", "[", "!["]
     for node in old_nodes:
         if node.text_type != TextType.TEXT:
             new_nodes.append(node)
         else:
             if delimiter in node.text:
                 parts = node.text.split(delimiter)
-                for i in range(1, len(parts), 2):
-                    for other_delimiter in delimiter:
-                        if other_delimiter in parts[i]:
-                            raise ValueError("Cannot have mixed or nested delimiters")
-                
+
                 if len(parts) % 2 == 0:
                     raise ValueError("Invalid markdown pattern")
+            
+                current_delimiters = delimters_to_check.copy()
+                if delimiter in current_delimiters:
+                    current_delimiters.remove(delimiter)
+                if delimiter == "**":
+                    current_delimiters.remove("*")
+
+                for i in range(1, len(parts), 2):
+                    for other_delimiter in delimters_to_check:
+                        if other_delimiter in parts[i]:   
+                            raise ValueError("Invalid markdown: mixed delimiters")
                 
                 for i in range(len(parts)):
                     current_part = parts[i]
@@ -76,3 +83,18 @@ def split_nodes_link(old_nodes):
                     new_nodes.append(TextNode(segment, TextType.TEXT))
     return new_nodes
 
+def split_nodes_delimiters(old_nodes):
+    nodes = old_nodes
+    nodes = split_node_delimiter(nodes, "**", TextType.BOLD)
+    nodes = split_node_delimiter(nodes, "*", TextType.ITALIC)
+    nodes = split_node_delimiter(nodes, "`", TextType.CODE)
+    return nodes
+
+def text_to_textnodes(text):
+    if not text:
+        return []
+    current_nodes = [TextNode(text, TextType.TEXT)]
+    current_nodes = split_nodes_delimiters(current_nodes)
+    current_nodes = split_nodes_link(current_nodes)
+    current_nodes = split_nodes_image(current_nodes)
+    return current_nodes
