@@ -1,6 +1,6 @@
 import unittest
 
-from markdownmethods import extract_markdown_images, extract_markdown_links
+from markdownmethods import extract_markdown_images, extract_markdown_links, markdown_to_blocks
 
 class TestMarkdownMethods(unittest.TestCase):
     def test_extract_markdown_links(self):
@@ -153,6 +153,57 @@ class TestMarkdownMethods(unittest.TestCase):
         for text, expected in test_cases:
             result = extract_markdown_links(text)
             self.assertEqual(result, expected)
+
+    # Testing for markdown to blocks
+
+    def test_markdown_to_blocks_empty_string(self):
+        test_markdown = ""
+        expected_result = []
+        result = markdown_to_blocks(test_markdown)
+        self.assertEqual(expected_result, result)
+
+    def test_markdown_to_blocks(self):
+            test_markdown = """# This is a heading
+
+This is a paragraph of text. It has some **bold** and *italic* words inside of it.
+
+* This is the first list item in a list block
+* This is a list item
+* This is another list item"""
+            expected_result = [
+                "# This is a heading",
+                "This is a paragraph of text. It has some **bold** and *italic* words inside of it.",
+                "* This is the first list item in a list block\n* This is a list item\n* This is another list item"
+            ]
+            result = markdown_to_blocks(test_markdown)
+            self.assertEqual(result, expected_result)
+    
+    def test_markdown_to_blocks_only_whitespace(self):
+        test_markdown = " \n \n "
+        expected_result = []
+        result = markdown_to_blocks(test_markdown)
+        self.assertEqual(result, expected_result)
+
+    def test_markdown_to_block_multiple_consectutive_empty_lines(self):
+        test_markdown = "block1\n\n\nblock2"
+        expected_result = [
+            "block1",
+            "block2"
+        ]
+        result = markdown_to_blocks(test_markdown)
+        self.assertEqual(result, expected_result)
+    
+    def test_markdown_to_block_whitespace_only_blocks(self):
+        test_markdown = "block1\n\n \n\nblock2"
+        expected_result = [
+            "block1",
+            "block2"
+        ]
+        result = markdown_to_blocks(test_markdown)
+        self.assertEqual(result, expected_result)
+    
+    
+
 
 if __name__ == "__main__":
     unittest.main()
