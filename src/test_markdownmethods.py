@@ -1,6 +1,6 @@
 import unittest
 
-from markdownmethods import extract_markdown_images, extract_markdown_links, markdown_to_blocks
+from markdownmethods import extract_markdown_images, extract_markdown_links, markdown_to_blocks, block_to_block_type
 
 class TestMarkdownMethods(unittest.TestCase):
     def test_extract_markdown_links(self):
@@ -201,6 +201,124 @@ This is a paragraph of text. It has some **bold** and *italic* words inside of i
         ]
         result = markdown_to_blocks(test_markdown)
         self.assertEqual(result, expected_result)
+
+    # Testing block to block type
+
+    def test_block_to_block_type_heading(self):
+        test_block1 = "# Heading 1"
+        expected_result1 = "heading"
+        result1 = block_to_block_type(test_block1)
+        self.assertEqual(result1, expected_result1)
+        test_block2 = "### Heading 3"
+        expected_result2 = "heading"
+        result2 = block_to_block_type(test_block2)
+        self.assertEqual(result2, expected_result2)
+        test_block3 = "###### Heading 6"
+        expected_result3 = "heading"
+        result3 = block_to_block_type(test_block3)
+        self.assertEqual(result3, expected_result3)
+
+    def test_block_to_block_type_heading_invalid(self):
+        test_block1 = "#NoSpace"
+        expected_result1 = "heading"
+        result1 = block_to_block_type(test_block1)
+        self.assertNotEqual(result1, expected_result1)
+        test_block2 = "####### Heading 3"
+        expected_result2 = "heading"
+        result2 = block_to_block_type(test_block2)
+        self.assertNotEqual(result2, expected_result2)
+        test_block3 = "# "
+        expected_result3 = "heading"
+        result3 = block_to_block_type(test_block3)
+        self.assertNotEqual(result3, expected_result3)
+
+    def test_block_to_block_type_quote(self):
+        test_block1 = "> Single quote"
+        expected_result1 = "quote"
+        result1 = block_to_block_type(test_block1)
+        self.assertEqual(result1, expected_result1)
+        test_block2 = "> Line1\n> Line 2"
+        expected_result2 = "quote"
+        result2 = block_to_block_type(test_block2)
+        self.assertEqual(result2, expected_result2)
+        test_block3 = "> Line1\n> Line 2\n> Line 3"
+        expected_result3 = "quote"
+        result3 = block_to_block_type(test_block3)
+        self.assertEqual(result3, expected_result3)
+
+    def test_block_to_block_type_quote_invalid(self):
+        test_block1 = "> Line1\nLine 2"
+        expected_result1 = "quote"
+        result1 = block_to_block_type(test_block1)
+        self.assertNotEqual(result1, expected_result1)
+        test_block2 = "Not a quote"
+        expected_result2 = "quote"
+        result2 = block_to_block_type(test_block2)
+        self.assertNotEqual(result2, expected_result2)
+
+    def test_block_to_block_type_code(self):
+        test_block1 = "```code```"
+        expected_result1 = "code"
+        result1 = block_to_block_type(test_block1)
+        self.assertEqual(result1, expected_result1)
+
+    def test_block_to_block_type_unordered_lists(self):
+        test_block1 = "* Item 1\n* Item 2"
+        expected_result1 = "unordered_list"
+        result1 = block_to_block_type(test_block1)
+        self.assertEqual(result1, expected_result1)
+        test_block2 = "- Item 1\n- Item 2"
+        expected_result2 = "unordered_list"
+        result2 = block_to_block_type(test_block2)
+        self.assertEqual(result2, expected_result2)
+
+    def test_block_to_block_type_unordered_list_invalid(self):
+        test_block1 = "* Item 1\n- Item 2"
+        expected_result1 = "unordered_list"
+        result1 = block_to_block_type(test_block1)
+        self.assertNotEqual(result1, expected_result1)
+        test_block2 = "*Item 1"
+        expected_result2 = "unordered_list"
+        result2 = block_to_block_type(test_block2)
+        self.assertNotEqual(result2, expected_result2)
+        test_block3 = "* Item 1\nItem 2"
+        expected_result3 = "unordered_list"
+        result3 = block_to_block_type(test_block3)
+        self.assertNotEqual(result3, expected_result3)
+        test_block4 = "*"
+        expected_result4 = "unordered_list"
+        result4 = block_to_block_type(test_block4)
+        self.assertNotEqual(result4, expected_result4)
+
+    def test_block_to_block_type_ordered_list(self):
+        test_block1 = "1. First\n2. Second"
+        expected_result1 = "ordered_list"
+        result1 = block_to_block_type(test_block1)
+        self.assertEqual(result1, expected_result1)
+        test_block2 = "1. First\n3. Second"
+        expected_result2 = "paragraph"
+        result2 = block_to_block_type(test_block2)
+        self.assertEqual(result2, expected_result2)
+        test_block3 = "2. First"
+        expected_result3 = "paragraph"
+        result3 = block_to_block_type(test_block3)
+        self.assertEqual(result3, expected_result3)
+        test_block4 = "1.First"
+        expected_result4 = "paragraph"
+        result4 = block_to_block_type(test_block4)
+        self.assertEqual(result4, expected_result4)
+        test_block5 = "1. \n2. "
+        expected_result5 = "paragraph"
+        result5 = block_to_block_type(test_block5)
+        self.assertEqual(result5, expected_result5)
+        test_block6 = "1. First\n2. Second\n3. Third"
+        expected_result6 = "ordered_list"
+        result6 = block_to_block_type(test_block6)
+        self.assertEqual(result6, expected_result6)
+        test_block7 = "1 First"
+        expected_result7 = "paragraph"
+        result7 = block_to_block_type(test_block7)
+        self.assertEqual(result7, expected_result7)
     
     
 
